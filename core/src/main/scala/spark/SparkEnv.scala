@@ -7,7 +7,8 @@ class SparkEnv (
   val cacheTracker: CacheTracker,
   val mapOutputTracker: MapOutputTracker,
   val shuffleFetcher: ShuffleFetcher,
-  val shuffleManager: ShuffleManager
+  val shuffleManager: ShuffleManager,
+  val eagerSharer: EagerSharer
 )
 
 object SparkEnv {
@@ -35,6 +36,8 @@ object SparkEnv {
 
     val cacheTracker = new CacheTracker(isMaster, cache)
 
+    val eagerSharer = new EagerSharer(isMaster)
+
     val mapOutputTracker = new MapOutputTracker(isMaster)
 
     val shuffleFetcherClass = 
@@ -51,6 +54,7 @@ object SparkEnv {
       cacheTracker,
       mapOutputTracker,
       shuffleFetcher,
-      shuffleMgr)
+      shuffleMgr,
+      eagerSharer)
   }
 }

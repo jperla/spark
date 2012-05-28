@@ -233,6 +233,11 @@ class SparkContext(
   // Keep around a weak hash map of values to Cached versions?
   def broadcast[T](value: T) = Broadcast.getBroadcastFactory.newBroadcast[T] (value, isLocal)
 
+
+  def eagerReducer[M,R](initialValue: R, param: EagerReducer[M,R]) =
+      new EagerVar(initialValue, param)
+
+
   // Stop the SparkContext
   def stop() {
     scheduler.stop()
