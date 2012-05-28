@@ -12,7 +12,7 @@ import scala.collection.mutable.HashSet
 
 sealed trait EagerSharerMessage
 case class SlaveLocation(slaveHost: String, slavePort: Int) extends EagerSharerMessage
-case class EagerMessageToMaster(message: MapMessage[_,_]) extends EagerSharerMessage
+case class MapMessageToMaster(message: MapMessage[_,_]) extends EagerSharerMessage
 case class EagerDiffToSlave(diff: EagerDiff[_,_]) extends EagerSharerMessage
 case object StopEagerSharer extends EagerSharerMessage
 
@@ -136,7 +136,7 @@ class EagerMasterReceiverActor(masterSenderActor: EagerMasterSenderActor) extend
             }
           }
           reply('OK)
-        case EagerMessageToMaster(newVar: MapMessage[_,_]) =>
+        case MapMessageToMaster(newVar: MapMessage[_,_]) =>
           println("Received message @ master from " + sender + " " + newVar.id + ":" + newVar)
           updateAndSendIfNeeded(newVar.id, newVar)
         case StopEagerSharer =>
@@ -153,7 +153,7 @@ class EagerMasterReceiverActor(masterSenderActor: EagerMasterSenderActor) extend
         var updateToSend = oldVar.reduceTop(message.message)
 
         if (updateToSend != null) {
-            EagerVars.applyDiff(updateToSend) // need to apply to all local Master threads
+            EagerVars.applyDiff(updateToSend) // apply to all local Master threads
 
             masterSenderActor.diffsToSend.synchronized {
                 masterSenderActor.diffsToSend.put(updateToSend.id, updateToSend)
@@ -166,9 +166,7 @@ class EagerMasterReceiverActor(masterSenderActor: EagerMasterSenderActor) extend
   }
 }
 
-class EagerSharerSlaveActor()
-extends DaemonActor with Logging {
-
+class EagerSharerSlaveActor() extends DaemonActor with Logging {
   def act() {
     val slavePort = System.getProperty("spark.slave.port").toInt
     RemoteActor.alive(slavePort)
@@ -219,7 +217,7 @@ class EagerSharer(isMaster: Boolean) extends Logging {
 
   def sendMapMessage[G,T](p: MapMessage[G,T]) {
     println("sending eager map message")
-    masterReceiverActor ! EagerMessageToMaster(p)
+    masterReceiverActor ! MapMessageToMaster(p)
   }
   
   def stop() {
